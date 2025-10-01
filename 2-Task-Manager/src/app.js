@@ -16,4 +16,7 @@ app.use(urlencoded({
 }))
 app.use(cookieParser());
 
+import userRouter from "./routes/task.route.js";
+app.use("/api/tasks", userRouter);
+
 export {app}
