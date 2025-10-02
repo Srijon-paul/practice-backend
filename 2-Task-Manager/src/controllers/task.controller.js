@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import { Task } from "../models/tasks.models.js";
-import { ApiError } from "../utils/ApiError";
-import { ApiResponse } from "../utils/ApiResponse";
-import { asyncHandler } from "../utils/asyncHandler";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 const createTask = asyncHandler(async (req, res) => {
 	// 1. taking tasks as input from the user at frontend
