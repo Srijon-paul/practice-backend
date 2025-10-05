@@ -31,6 +31,21 @@ const createTask = asyncHandler(async (req, res) => {
 	)
 })
 
+const deleteTask = asyncHandler(async (req, res) => {
+	const {task} = req.params;
+	if(!task){
+		throw new ApiError(400, "Task not found!");
+	}
+	const deletedTask = await Task.findByIdAndDelete(task)
+	if(!deletedTask){
+		throw new ApiError(400, "Task not found!")
+	}
+	return res.status(200).json(
+		new ApiResponse(200, "Task successfully deleted", task)
+	)
+})
+
 export {
 	createTask,
+	deleteTask,
 }
