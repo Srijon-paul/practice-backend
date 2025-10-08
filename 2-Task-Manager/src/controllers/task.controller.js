@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import { Task } from "../models/tasks.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -31,6 +30,46 @@ const createTask = asyncHandler(async (req, res) => {
 	)
 })
 
+const getTask = asyncHandler(async (req, res) => {
+	const {task} = req.params;
+	if(!task){
+		throw new ApiError(400, "Task not found!");
+	}
+	const gotTask = await Task.findById(task);
+	if(!gotTask){
+		throw new ApiError(400, 'Task not found!');
+	}
+	return res.status(200).json(
+		new ApiResponse(200, "Task successfully retrieved", gotTask)
+	)
+})
+
+const updateTask = asyncHandler(async (req, res) => {
+	const {task} = req.params;
+	if(!task){
+		throw new ApiError(400, "task not found!")
+	}
+	const {title, desc} = req.body;
+	if([title, desc].some((field) => field?.trim === "")){
+		throw new ApiError(400, "All fields are mandatory");
+	}
+	const update = await Task.findByIdAndUpdate(task,
+		{
+			$set: {
+				title: title,
+				description: desc
+			}
+		},
+		{new: true}
+	)
+	if(!update){
+		throw new ApiError(400, "task not found!")
+	}
+	return res.status(200).json(
+		new ApiResponse(200, "task updated succesfully", update)
+	)
+})
+
 const deleteTask = asyncHandler(async (req, res) => {
 	const {task} = req.params;
 	if(!task){
@@ -48,4 +87,6 @@ const deleteTask = asyncHandler(async (req, res) => {
 export {
 	createTask,
 	deleteTask,
+	getTask,
+	updateTask
 }
