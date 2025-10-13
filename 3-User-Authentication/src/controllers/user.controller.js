@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -130,9 +129,55 @@ const refreshAccessToken = asyncHandler(async(req, res) => {
 	}
 })
 
+const changePassword = asyncHandler(async(req, res) => {
+	const {oldPassword, newPassword} = req.body;
+	if(!(oldPassword || newPassword)){
+		throw new ApiError(400, "Password cannot be empty")
+	}
+	const user = await User.findById(req.user._id);
+	if(!user){
+		throw new ApiError(400, "User not found!");
+	}
+	const isPasswordValid = await user.isPasswordCorrect(oldPassword);
+	if(!isPasswordValid){
+		throw new ApiError(400, "Invalid old password!")
+	}
+	user.password = newPassword;
+	user.save();
+
+	return res.status(200).json(new ApiResponse(200, {}, "Password changed successfully!"));
+})
+
+const updateEmail = asyncHandler(async(req, res) => {
+	const {email} = req.body;
+	if(!email){
+		throw new ApiError(400, "Email is required!");
+	}
+	const user = await User.findByIdAndUpdate(req.user?._id, {
+		$set: {
+			email: email
+		}
+	},{new: true}).select("-password")
+	
+	return res.status(200).json(
+		new ApiResponse(200, user, "Email updated Successfully")
+	)
+})
+
+const getCurrentUser = asyncHandler(async(req, res) => {
+	const user = req.user;
+	if(!user){
+		throw new ApiError(400, "User not Logged in or Does not Exist")
+	}
+	return res.status(200).json(new ApiResponse(200, user, "details fetched succesfully"))
+})
+
 export {
 	registerUser,
 	loginUser,
 	logoutUser,
 	refreshAccessToken,
+	changePassword,
+	updateEmail,
+	getCurrentUser
 }
