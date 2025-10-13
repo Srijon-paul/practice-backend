@@ -48,8 +48,8 @@ const registerUser = asyncHandler(async(req, res) => {
 
 const loginUser = asyncHandler(async(req, res) => {
 	const {email, password} = req.body;
-	if(!email){
-		throw new ApiError(400, "Email is required!")
+	if(!email || !password){
+		throw new ApiError(400, "All fields are required!")
 	}
 
 	const user = await User.findOne({email});
@@ -73,7 +73,7 @@ const loginUser = asyncHandler(async(req, res) => {
 	.cookie("accessToken", accessToken, option)
 	.cookie("refreshToken", refreshToken, option)
 	.json(
-		new ApiResponse(200, "User Logged In Successfully", {loggedInUser, refreshToken, accessToken})
+		new ApiResponse(200, "User Logged In Successfully", {loggedInUser})
 	)
 })
 
