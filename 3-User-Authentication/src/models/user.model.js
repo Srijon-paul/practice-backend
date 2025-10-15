@@ -19,6 +19,13 @@ const userSchema = mongoose.Schema({
 		type: String,
 		required: true,
 	},
+	avatar: {
+		type: String,
+		required: true,
+	},
+	avatarId: {
+		type: String
+	},
 	refreshToken: {
 		type: String,
 	}

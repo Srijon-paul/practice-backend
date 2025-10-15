@@ -3,6 +3,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import {v2 as cloudinary} from "cloudinary";
 
 const generateAccessAndRefreshToken = async (userId) => {
 	try {
@@ -29,16 +31,30 @@ const registerUser = asyncHandler(async(req, res) => {
 	if(existedUser){
 		throw new ApiError(409, "Email already Registered!!");
 	}
+
+	const avatarLocalPath = req.file?.path;
+	if(!avatarLocalPath){
+		throw new ApiError(400, "Avatar is required");
+	}
+	const avatar = await uploadOnCloudinary(avatarLocalPath);
+	if(!avatar){
+		throw new ApiError(400, "Avatar is required");
+	}
 	
 	const user = await User.create({
 		name,
 		email,
-		password
+		password,
+		avatar: avatar.url,
+		avatarId: avatar.public_id
 	})
 	const createdUser = await User.findById(user._id).select(
 		"-password -refreshToken"
 	)
 	if(!createdUser){
+		if(avatar?.public_id){
+			await cloudinary.uploader.destroy(avatar.public_id)
+		}
 		throw new ApiError(500, "Something went wrong while registering the user !!");
 	}
 	return res.status(201).json(
@@ -164,6 +180,37 @@ const updateEmail = asyncHandler(async(req, res) => {
 	)
 })
 
+const updateAvatar = asyncHandler(async(req, res) => {
+	const avatarLocalPath = req.file?.path;
+	if(!avatarLocalPath){
+		throw new ApiError(400, "avatar is required!")
+	}
+	const oldUser = await User.findById(req.user?._id);
+	if(!oldUser){
+		throw new ApiError(400, "Failed to fetch old user");
+	}
+	if(oldUser.avatarId){
+		await cloudinary.uploader.destroy(oldUser.avatarId);
+	}
+
+	const avatar = await uploadOnCloudinary(avatarLocalPath);
+	if(!avatar){
+		throw new ApiError(400, "avatar is required!");
+	}
+
+	const user = await User.findByIdAndUpdate(req.user?._id,{
+		$set: {
+			avatar: avatar.url,
+			avatarId: avatar.public_id
+		}
+	},
+	{new: true}).select("-password -refreshToken");
+
+	return res.status(200).json(
+		new ApiResponse(200, user, "Avatar successfully updated")
+	)
+})
+
 const getCurrentUser = asyncHandler(async(req, res) => {
 	const user = req.user;
 	if(!user){
@@ -179,5 +226,6 @@ export {
 	refreshAccessToken,
 	changePassword,
 	updateEmail,
-	getCurrentUser
+	getCurrentUser,
+	updateAvatar,
 }
