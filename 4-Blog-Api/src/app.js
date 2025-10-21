@@ -16,7 +16,9 @@ app.use(express.urlencoded({
 }))
 app.use(cookieParser());
 
-import router from "./routes/user.router.js";
+import router from "./routes/user.route.js";
 app.use("/api/users", router);
+import postRouter from "./routes/post.route.js";
+app.use("/api/posts", postRouter);
 
 export {app}
