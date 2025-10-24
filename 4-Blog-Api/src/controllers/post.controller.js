@@ -26,7 +26,10 @@ const createPost = asyncHandler(async (req, res) => {
 		image: {
 			imageId: image.public_id,
 			imageUrl: image.url
-		}
+		},
+		author: req.user._id,
+		likes: [],
+		comments: []
 	});
 	const createdPost = await Post.findById(post._id);
 	if(!createdPost){
@@ -38,6 +41,21 @@ const createPost = asyncHandler(async (req, res) => {
 	return res.status(200).json(
 		new ApiResponse(201, "Post Created Successfully!", createdPost)
 	)
+});
+
+const updatePost = asyncHandler(async(req, res) => {
+	const {postId} = req.params;
+	const post = await Post.findById(postId);
+	if(!post){
+		throw new ApiError(404, "Post Not Found!");
+	}
+	if(post.author.toString() !== req.user._id.toString()){
+		throw new ApiError(404, "Unauthorized update are forbidden!")
+	}
+	const {title, content} = req.body;
+	if(title){
+		
+	}
 })
 
 export {
