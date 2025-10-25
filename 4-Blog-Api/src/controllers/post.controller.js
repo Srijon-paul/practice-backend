@@ -50,14 +50,68 @@ const updatePost = asyncHandler(async(req, res) => {
 		throw new ApiError(404, "Post Not Found!");
 	}
 	if(post.author.toString() !== req.user._id.toString()){
-		throw new ApiError(404, "Unauthorized update are forbidden!")
+		throw new ApiError(403, "Unauthorized update are forbidden!")
 	}
 	const {title, content} = req.body;
 	if(title){
-		
+		const updateTitle = await Post.findByIdAndUpdate(post._id,
+			{
+				$set: {
+					title: title
+				}
+			},
+			{new: true}
+		)
+		if(!updateTitle) throw new ApiError(404, "Post not found!");
 	}
+	if(content){
+		const updateContent = await Post.findByIdAndUpdate(post._id,
+			{
+				$set: {
+					content: content
+				}
+			},
+			{new: true}
+		)
+		if(!updateContent) throw new ApiError(404, "Post not found!");
+	}
+	const postImage = req.file?.path;
+	if(postImage){
+		if(post.image.imageId) cloudinary.uploader.destroy(post.image.imageId);
+		const newImage = await uploadOnCloudinary(postImage);
+		if(!newImage){
+			throw new ApiError(404, "Image not found!");
+		}
+		const updateImage = await Post.findByIdAndUpdate(post._id,
+			{
+				$set: {
+					image: {
+						imageId: newImage.public_id,
+						imageUrl: newImage.url
+					}
+				} 
+			},
+			{new: true}
+		)
+		if(!updateImage) throw new ApiError(404, "Post not found!");
+	}
+	return res.status(200).json(
+		new ApiResponse(200, post, "Post Successfully Updated!")
+	)
+})
+// one improvement can be done by storing the updates in an object then making the changes accordingly by calling the db only once.
+
+const getPost = asyncHandler(async(req, res) => {
+	const {postId} = req.params;
+	const post = await Post.findById(postId);
+	if(!post) throw new ApiError(404, "Post not found!");
+	return res.status(200).json(
+		new ApiResponse(200, post, "Post successfully fetched!")
+	)
 })
 
 export {
 	createPost,
+	updatePost,
+	getPost,
 }
