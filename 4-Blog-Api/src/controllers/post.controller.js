@@ -103,11 +103,15 @@ const updatePost = asyncHandler(async(req, res) => {
 
 const getPost = asyncHandler(async(req, res) => {
 	const {postId} = req.params;
-	const post = await Post.findById(postId);
+	const post = await Post.findById(postId).populate("author", "-refreshToken");
 	if(!post) throw new ApiError(404, "Post not found!");
 	return res.status(200).json(
 		new ApiResponse(200, post, "Post successfully fetched!")
 	)
+})
+
+const getAllPost = asyncHandler(async(req, res) => {
+
 })
 
 export {
